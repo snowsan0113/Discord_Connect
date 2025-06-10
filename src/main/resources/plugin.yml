@@ -1,0 +1,4 @@
+name: Discord_Connect
+version: '1.0-SNAPSHOT'
+main: snowsan0113.discord_connect.Main
+api-version: '1.20'
