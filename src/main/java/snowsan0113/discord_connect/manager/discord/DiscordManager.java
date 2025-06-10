@@ -2,7 +2,12 @@ package snowsan0113.discord_connect.manager.discord;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.SelfUser;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -52,6 +57,23 @@ public class DiscordManager extends ListenerAdapter {
     public static TextChannel getSendChannel() {
         String channel_id = config.getString("send_channel_id");
         return jda.getTextChannelById(channel_id);
+    }
+
+    @Override
+    public void onMessageReceived(MessageReceivedEvent event) {
+        Member member = event.getMember();
+        Message message = event.getMessage();
+        TextChannel send_channel = DiscordManager.getSendChannel();
+        JDA jda = event.getJDA();
+        SelfUser self = jda.getSelfUser();
+
+        if (member != null) {
+            User user = member.getUser();
+            if (self.getIdLong() != user.getIdLong()) {
+                String message_format = String.format("[Discord] <%s>: %s", user.getName(), message);
+                Bukkit.broadcastMessage(message_format);
+            }
+        }
     }
 
 }
