@@ -9,6 +9,10 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        PluginManager plm = getServer().getPluginManager();
+        plm.registerEvents(new PlayerChatListener(), this);
+
         try {
             DiscordManager.startBot();
         } catch (InterruptedException e) {
