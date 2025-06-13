@@ -11,10 +11,12 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import snowsan0113.discord_connect.Main;
+import snowsan0113.discord_connect.command.discord.MinecraftJoinCommand;
 
 public class DiscordManager extends ListenerAdapter {
 
@@ -33,9 +35,14 @@ public class DiscordManager extends ListenerAdapter {
             jda = JDABuilder.createDefault(token)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES)
                     .addEventListeners(new DiscordManager())
+                    .addEventListeners(new MinecraftJoinCommand())
                     .build();
 
             jda.updateCommands()
+                    .addCommands(Commands.slash("mc-join", "サーバーに参加するコマンド")
+                            .addOptions(
+                                    new OptionData(OptionType.STRING, "mcid", "マインクラフトID"),
+                                    new OptionData(OptionType.INTEGER, "code", "認証コード")))
                     .queue();
 
             jda.awaitReady();

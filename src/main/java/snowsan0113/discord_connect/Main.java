@@ -3,6 +3,7 @@ package snowsan0113.discord_connect;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import snowsan0113.discord_connect.listener.PlayerChatListener;
+import snowsan0113.discord_connect.listener.PlayerJoinListener;
 import snowsan0113.discord_connect.manager.discord.DiscordManager;
 
 public class Main extends JavaPlugin {
@@ -12,6 +13,7 @@ public class Main extends JavaPlugin {
         saveDefaultConfig();
         PluginManager plm = getServer().getPluginManager();
         plm.registerEvents(new PlayerChatListener(), this);
+        plm.registerEvents(new PlayerJoinListener(), this);
 
         try {
             DiscordManager.startBot();
@@ -24,6 +26,6 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
+        DiscordManager.stopBot();
     }
 }
