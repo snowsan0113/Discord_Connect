@@ -2,7 +2,9 @@ package snowsan0113.discord_connect.manager.discord;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.dv8tion.jda.api.entities.User;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import snowsan0113.discord_connect.Main;
@@ -10,6 +12,9 @@ import snowsan0113.discord_connect.Main;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class WhitelistManager {
 
@@ -30,6 +35,32 @@ public class WhitelistManager {
 
             writeFile(gson.toJson(raw_json));
         }
+    }
+
+    public static DiscordWhiteList getWhiteList(OfflinePlayer player) throws IOException {
+        List<DiscordWhiteList> list = getWhiteList();
+        return list.stream()
+                .filter(whiteList -> whiteList.getPlayer().getUniqueId().equals(player.getUniqueId()))
+                .findFirst().orElse(null);
+    }
+
+    public static List<DiscordWhiteList> getWhiteList() throws IOException {
+        JsonObject raw_json = getJson();
+        List<DiscordWhiteList> list = new ArrayList<>();
+        if (raw_json.size() >= 0) {
+            for (Map.Entry<String, JsonElement> entry : raw_json.entrySet()) {
+                String player_name = entry.getKey();
+                JsonObject whitelist_data = entry.getValue().getAsJsonObject();
+                String discord_id = whitelist_data.get("discord_id").getAsString();
+
+                OfflinePlayer player = Bukkit.getOfflinePlayer(player_name);
+                User user = DiscordManager.getJDA().retrieveUserById(discord_id).complete();
+
+                DiscordWhiteList discord_whitelist = new DiscordWhiteList(player, user);
+                list.add(discord_whitelist);
+            }
+        }
+        return list;
     }
 
     public static boolean isWhiteList(OfflinePlayer player) throws IOException {
@@ -67,6 +98,24 @@ public class WhitelistManager {
 
     private static File getFile() {
         return new File(Main.getPlugin(Main.class).getDataFolder(), "discord_whitelist.json");
+    }
+
+    public static class DiscordWhiteList {
+        private final OfflinePlayer player;
+        private final User user;
+
+        public DiscordWhiteList(OfflinePlayer player, User user) {
+            this.player = player;
+            this.user = user;
+        }
+
+        public OfflinePlayer getPlayer() {
+            return player;
+        }
+
+        public User getUser() {
+            return user;
+        }
     }
 
 }

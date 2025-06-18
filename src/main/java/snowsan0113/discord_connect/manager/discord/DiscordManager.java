@@ -17,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import snowsan0113.discord_connect.Main;
 import snowsan0113.discord_connect.command.discord.MinecraftJoinCommand;
+import snowsan0113.discord_connect.command.discord.WhiteListInfoCommand;
 
 public class DiscordManager extends ListenerAdapter {
 
@@ -36,6 +37,7 @@ public class DiscordManager extends ListenerAdapter {
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES)
                     .addEventListeners(new DiscordManager())
                     .addEventListeners(new MinecraftJoinCommand())
+                    .addEventListeners(new WhiteListInfoCommand())
                     .build();
 
             jda.updateCommands()
@@ -43,6 +45,8 @@ public class DiscordManager extends ListenerAdapter {
                             .addOptions(
                                     new OptionData(OptionType.STRING, "mcid", "マインクラフトID"),
                                     new OptionData(OptionType.INTEGER, "code", "認証コード")))
+                    .addCommands(Commands.slash("whitelist-info", "ホワイトリストの情報")
+                            .addOption(OptionType.STRING, "whitelist-value", "マイクラID"))
                     .queue();
 
             jda.awaitReady();
