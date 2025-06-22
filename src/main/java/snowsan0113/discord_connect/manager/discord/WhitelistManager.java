@@ -12,92 +12,91 @@ import snowsan0113.discord_connect.Main;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class WhitelistManager {
 
-    private static final Gson gson;
+    private static SQLManager sql;
 
-    static  {
-        gson = new GsonBuilder().setPrettyPrinting().create();
-    }
-
-    public static void addWhiteList(OfflinePlayer player, String id) throws IOException {
-        JsonObject raw_json = getJson();
-        if (!raw_json.has(player.getName())) {
-            JsonObject player_json = new JsonObject();
-            player_json.addProperty("UUID", player.getUniqueId().toString());
-            player_json.addProperty("discord_id", id);
-
-            raw_json.add(player.getName(), player_json);
-
-            writeFile(gson.toJson(raw_json));
-        }
-    }
-
-    public static DiscordWhiteList getWhiteList(OfflinePlayer player) throws IOException {
-        List<DiscordWhiteList> list = getWhiteList();
-        return list.stream()
-                .filter(whiteList -> whiteList.getPlayer().getUniqueId().equals(player.getUniqueId()))
-                .findFirst().orElse(null);
-    }
-
-    public static List<DiscordWhiteList> getWhiteList() throws IOException {
-        JsonObject raw_json = getJson();
-        List<DiscordWhiteList> list = new ArrayList<>();
-        if (raw_json.size() >= 0) {
-            for (Map.Entry<String, JsonElement> entry : raw_json.entrySet()) {
-                String player_name = entry.getKey();
-                JsonObject whitelist_data = entry.getValue().getAsJsonObject();
-                String discord_id = whitelist_data.get("discord_id").getAsString();
-
-                OfflinePlayer player = Bukkit.getOfflinePlayer(player_name);
-                User user = DiscordManager.getJDA().retrieveUserById(discord_id).complete();
-
-                DiscordWhiteList discord_whitelist = new DiscordWhiteList(player, user);
-                list.add(discord_whitelist);
+    static {
+        if (SQLManager.isDatabaseMode()) {
+            try {
+                sql = new SQLManager();
+                sql.getConnect();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
-        return list;
     }
 
-    public static boolean isWhiteList(OfflinePlayer player) throws IOException {
-        JsonObject raw_json = getJson();
-        return raw_json.has(player.getName());
-    }
-
-    public static JsonObject getJson() throws IOException {
-        createJson();
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(getFile().toPath()), StandardCharsets.UTF_8))) {
-            JsonObject json = gson.fromJson(reader, JsonObject.class);
-            if (json == null) {
-                writeFile("{}");
-            }
-            return json;
+    public static void addWhiteList(OfflinePlayer player, String id) throws SQLException, IOException {
+        UUID uuid = player.getUniqueId();
+        if (getSaveMode().equalsIgnoreCase("SQL")) {
+            sql.save(uuid, id);
+        }
+        else if (getSaveMode().equalsIgnoreCase("JSON")) {
+            JsonManager.addWhiteList(Bukkit.getOfflinePlayer(uuid), id);
+        }
+        else {
+            throw new UnsupportedOperationException();
         }
     }
 
-    public static void writeFile(String date) {
-        try (BufferedWriter write = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(getFile().toPath()), StandardCharsets.UTF_8))) {
-            write.write(date);
+    public static WhitelistManager.DiscordWhiteList getWhiteList(OfflinePlayer player) throws IOException, SQLException {
+        if (getSaveMode().equalsIgnoreCase("SQL")) {
+            return sql.getWhiteList()
+                    .stream()
+                    .filter(discordWhiteList -> discordWhiteList.getPlayer().getUniqueId().equals(player.getUniqueId()))
+                    .findFirst()
+                    .orElse(null);
         }
-        catch (IOException e) {
-            throw new RuntimeException(e);
+        else if (getSaveMode().equalsIgnoreCase("JSON")) {
+            return JsonManager.getWhiteList(player);
+        }
+        else {
+            throw new UnsupportedOperationException();
         }
     }
 
-    private static void createJson() throws IOException {
-        if (!getFile().exists()) {
-            getFile().createNewFile();
-            writeFile("{}");
+    public static List<WhitelistManager.DiscordWhiteList> getWhiteList() throws IOException, SQLException {
+        if (getSaveMode().equalsIgnoreCase("SQL")) {
+            return sql.getWhiteList();
+        }
+        else if (getSaveMode().equalsIgnoreCase("JSON")) {
+            return JsonManager.getWhiteList();
+        }
+        else {
+            throw new UnsupportedOperationException();
         }
     }
 
-    private static File getFile() {
-        return new File(Main.getPlugin(Main.class).getDataFolder(), "discord_whitelist.json");
+    public static boolean isWhiteList(OfflinePlayer player) throws IOException, SQLException {
+        if (getSaveMode().equalsIgnoreCase("SQL")) {
+            return sql.getWhiteList()
+                    .stream()
+                    .anyMatch(discordWhiteList -> {
+                        System.out.println(discordWhiteList.getPlayer().getUniqueId() + "　　　:　　　" + player.getUniqueId());
+                                return discordWhiteList.getPlayer().getUniqueId().equals(player.getUniqueId());
+                            }
+                    );
+        }
+        else if (getSaveMode().equalsIgnoreCase("JSON")) {
+            return JsonManager.isWhiteList(player);
+        }
+        else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static String getSaveMode() {
+        if (sql != null) {
+            return "SQL";
+        }
+        return "JSON";
     }
 
     public static class DiscordWhiteList {

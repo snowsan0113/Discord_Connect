@@ -9,11 +9,12 @@ import snowsan0113.discord_connect.manager.discord.VerifyManager;
 import snowsan0113.discord_connect.manager.discord.WhitelistManager;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class PlayerJoinListener implements Listener {
     
     @EventHandler
-    public void onJoin(PlayerLoginEvent event) throws IOException {
+    public void onJoin(PlayerLoginEvent event) throws IOException, SQLException {
         Player player = event.getPlayer();
 
         if (WhitelistManager.isWhiteList(player)) {

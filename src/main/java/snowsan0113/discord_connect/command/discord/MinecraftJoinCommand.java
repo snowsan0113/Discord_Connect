@@ -11,6 +11,7 @@ import snowsan0113.discord_connect.manager.discord.VerifyManager;
 import snowsan0113.discord_connect.manager.discord.WhitelistManager;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class MinecraftJoinCommand extends ListenerAdapter {
 
@@ -33,6 +34,8 @@ public class MinecraftJoinCommand extends ListenerAdapter {
                         channel.sendMessage("ホワイトリストに登録することができました。").queue();
                     } catch (IOException e) {
                         channel.sendMessage("エラーが発生しました。エラー: " + e.getMessage()).queue();
+                        throw new RuntimeException(e);
+                    } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
                 }

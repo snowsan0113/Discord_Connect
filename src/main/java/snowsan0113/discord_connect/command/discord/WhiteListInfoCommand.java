@@ -11,6 +11,7 @@ import snowsan0113.discord_connect.manager.discord.WhitelistManager;
 
 import java.awt.*;
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class WhiteListInfoCommand extends ListenerAdapter {
 
@@ -36,7 +37,7 @@ public class WhiteListInfoCommand extends ListenerAdapter {
                     embed.setColor(Color.RED);
                 }
                 channel.sendMessageEmbeds(embed.build()).queue();
-            } catch (IOException e) {
+            } catch (IOException | SQLException e) {
                 throw new RuntimeException(e);
             }
         }

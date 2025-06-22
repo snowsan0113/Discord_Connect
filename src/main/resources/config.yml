@@ -1,2 +1,10 @@
 bot_token:
 send_channel_id:
+
+#SQL
+sql:
+  save_database: true
+  host: ""
+  port: "3306"
+  user: ""
+  password: ""
